@@ -337,6 +337,19 @@ def process_images_openvino(p: StableDiffusionProcessing, sampler_name, enable_c
 
             generator = [torch.Generator(device="cpu").manual_seed(s) for s in p.seeds]
 
+            img_width = p.width
+            img_height = p.height
+
+            if openvino_device[:3] == "GPU":
+                if img_height >= img_width and img_height > 728:
+                    assert img_height <= 768, "Image height should be equal or less than 768"
+                    img_height = 728
+                    img_width = int(img_width*(728.0/p.height))
+                elif img_width > img_height and img_width > 728:
+                    assert img_width <= 768, "Image width should be equal or less than 768"
+                    img_width = 728
+                    img_height = int(img_height*(728.0/p.width))
+
             time_stamps = []
 
             def callback(iter, t, latents):
@@ -348,8 +361,8 @@ def process_images_openvino(p: StableDiffusionProcessing, sampler_name, enable_c
                 negative_prompt=p.negative_prompts,
                 num_inference_steps=p.steps,
                 guidance_scale=p.cfg_scale,
-                height=p.height,
-                width=p.width,
+                height=img_height,
+                width=img_width,
                 generator=generator,
                 output_type="np",
                 callback = callback,
@@ -378,6 +391,9 @@ def process_images_openvino(p: StableDiffusionProcessing, sampler_name, enable_c
                     devices.torch_gc()
 
                 image = Image.fromarray(x_sample)
+
+                if img_width != p.width or img_height != p.height:
+                    image = image.resize((p.width, p.height), Image.LANCZOS)
 
                 if p.scripts is not None:
                     pp = scripts.PostprocessImageArgs(image)
