@@ -502,7 +502,7 @@ def get_diffusers_upscaler(upscaler: str):
     torch._dynamo.reset()
     openvino_clear_caches()
     model_name = "stabilityai/sd-x2-latent-upscaler"
-    print("OpenVINO Script: loading upscaling model: " + model_name) 
+    print("OpenVINO Script: loading upscaling model: " + model_name)
     sd_model = StableDiffusionLatentUpscalePipeline.from_pretrained(model_name, torch_dtype=torch.float32)
     sd_model.safety_checker = None
     sd_model.cond_stage_key = functools.partial(cond_stage_key, shared.sd_model)
@@ -1019,8 +1019,9 @@ def process_images_openvino(p: StableDiffusionProcessing, model_config, vae_ckpt
         if upscaler == "Latent":
             model_state.mode = -1
             shared.sd_diffusers_model = get_diffusers_upscaler(upscaler)
-            output_images[1:] = shared.sd_diffusers_model(
-                        image=output_images[1:],
+            img_idx = slice(len(output_images)) if p.batch_size == 1 else slice(1, len(output_images))
+            output_images[img_idx] = shared.sd_diffusers_model(
+                        image=output_images[img_idx],
                         prompt=p.prompts,
                         negative_prompt=p.negative_prompts,
                         num_inference_steps=hires_steps,
