@@ -121,6 +121,7 @@ def openvino_fx(subgraph, example_inputs):
     try:
         executor_parameters = None
         inputs_reversed = False
+        maybe_fs_cached_name = None
         if os.getenv("OPENVINO_TORCH_MODEL_CACHING") is not None:
             # Create a hash to be used for caching
             model_hash_str = sha256(subgraph.code.encode('utf-8')).hexdigest()
