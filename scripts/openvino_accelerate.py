@@ -63,6 +63,21 @@ from diffusers import (
     AutoencoderKL,
 )
 
+#ignore future warnings
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+##hack eval_frame.py for windows support, could be removed after official windows support from pytorch
+def check_if_dynamo_supported():
+    import sys
+    # Skip checking for Windows support for the OpenVINO backend
+    if sys.version_info >= (3, 12):
+        raise RuntimeError("Python 3.12+ not yet supported for torch.compile")
+
+torch._dynamo.eval_frame.check_if_dynamo_supported = check_if_dynamo_supported
+
+
+
 
 ## hack for pytorch
 def BUILD_MAP_UNPACK(self, inst):
@@ -121,6 +136,7 @@ def openvino_fx(subgraph, example_inputs):
     try:
         executor_parameters = None
         inputs_reversed = False
+        maybe_fs_cached_name = None
         if os.getenv("OPENVINO_TORCH_MODEL_CACHING") is not None:
             # Create a hash to be used for caching
             model_hash_str = sha256(subgraph.code.encode('utf-8')).hexdigest()
@@ -801,7 +817,7 @@ def process_images_openvino(p: StableDiffusionProcessing, model_config, vae_ckpt
             cn_params = p.extra_generation_params[key]
             cn_param_elements = [part.strip() for part in cn_params.split(', ')]
             for element in cn_param_elements:
-                if (element.split(':')[0] == "Model"):
+                if (element.split(':')[0] == "model"):
                     cn_model = (element.split(':')[1]).split(' ')[1]
 
             if (cn_model != "None"):
