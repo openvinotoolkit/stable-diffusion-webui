@@ -30,8 +30,3 @@ torch
 torchdiffeq==0.2.3
 torchsde==0.2.5
 transformers==4.30.2
-diffusers==0.23.0
-openvino==2023.2.0
-invisible-watermark
-
-
