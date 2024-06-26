@@ -6,9 +6,9 @@ basicsr
 blendmodes
 clean-fid
 einops
-fastapi>=0.90.1
+fastapi>=0.111.0
 gfpgan
-gradio==3.41.2
+gradio==4.31.3
 inflection
 jsonmerge
 kornia
